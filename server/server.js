@@ -12,7 +12,11 @@ const port = process.env.PORT || 5001;
 
 // Enhanced CORS configuration
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: [
+    process.env.FRONTEND_URL || 'http://localhost:3000',
+    'https://disaster-preparedness-phi.vercel.app',
+    'https://gemini-api-tester-react-v4.vercel.app'
+  ],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true
