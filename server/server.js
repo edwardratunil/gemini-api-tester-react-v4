@@ -9,9 +9,9 @@ require('dotenv').config();
 const app = express();
 const port = process.env.PORT || 5001;
 
-// Enhanced CORS configuration for Expo
+// Enhanced CORS configuration
 app.use(cors({
-  origin: '*', // Allow all origins for development
+  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true
@@ -22,9 +22,14 @@ app.use(express.json());
 app.use(morgan('dev'));
 
 // Create or open SQLite database
-const db = new sqlite3.Database(path.join(__dirname, 'database.sqlite'), (err) => {
+const dbPath = process.env.NODE_ENV === 'production' 
+  ? '/data/database.sqlite'  // Render persistent disk path
+  : path.join(__dirname, 'database.sqlite');
+
+const db = new sqlite3.Database(dbPath, (err) => {
   if (err) {
     console.error('Error opening database', err.message);
+    process.exit(1);
   } else {
     console.log('Connected to the SQLite database.');
     initializeDatabase();
@@ -640,6 +645,11 @@ app.delete('/api/users/:id/questions', (req, res) => {
       });
     }
   );
+});
+
+// Add health check endpoint
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'healthy', timestamp: new Date().toISOString() });
 });
 
 // Start server

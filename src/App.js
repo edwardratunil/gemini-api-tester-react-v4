@@ -267,28 +267,27 @@ function App() {
     await loadLeaderboard();
     
     // Load words used by this specific user
-    try {
-      const wordsData = await apiService.getUsedWords(parsedUser.id);
-      setUsedWords(wordsData.map(w => w.word));
-    } catch (error) {
-      console.error("Error loading user's word history:", error);
-      // If there's an error, start with an empty list
-      setUsedWords([]);
-    }
-    
-    // Load question history for the user
-    try {
-      const history = await getQuestionsApi.execute(parsedUser.id);
+    if (currentUser && currentUser.id) {
+      try {
+        const wordsData = await apiService.getUsedWords(currentUser.id);
+        setUsedWords(wordsData.map(w => w.word));
+      } catch (error) {
+        console.error("Error loading user's word history:", error);
+        // If there's an error, start with an empty list
+        setUsedWords([]);
+      }
       
-      // Filter history to only include items with educational trivia content
-      const triviaHistory = history.filter(item => checkForTrivia(item.response));
-      
-      setQuestionHistory(triviaHistory);
-    } catch (error) {
-      console.error("Error loading question history:", error);
-      setQuestionHistory([]);
+      // Load question history for the user
+      try {
+        const history = await getQuestionsApi.execute(currentUser.id);
+        // Filter history to only include items with educational trivia content
+        const triviaHistory = history.filter(item => checkForTrivia(item.response));
+        setQuestionHistory(triviaHistory);
+      } catch (error) {
+        console.error("Error loading question history:", error);
+        setQuestionHistory([]);
+      }
     }
-    
     // Preload sounds if enabled
     if (soundEnabled) {
       preloadSounds();

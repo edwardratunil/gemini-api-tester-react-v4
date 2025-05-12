@@ -288,6 +288,17 @@ const handleResponse = async (response) => {
   return data;
 };
 
+// Add API health check
+export const checkApiHealth = async () => {
+  try {
+    const response = await fetch(`${API_URL}/health`);
+    return await response.json();
+  } catch (error) {
+    console.error('API health check failed:', error);
+    throw error;
+  }
+};
+
 export default {
   register,
   login,
@@ -303,5 +314,6 @@ export default {
   clearWordHistory,
   saveUserQuestion,
   getUserQuestions,
-  clearQuestionHistory
+  clearQuestionHistory,
+  checkApiHealth
 }; 
