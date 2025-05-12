@@ -296,6 +296,44 @@ export const checkApiHealth = async () => {
   }
 };
 
+// Add comprehensive API test
+export const testApiConnection = async () => {
+  try {
+    console.log('Testing API connection to:', API_URL);
+    
+    // Test 1: Health Check
+    console.log('Test 1: Health Check');
+    const healthResponse = await fetch(`${API_URL}/health`);
+    const healthData = await healthResponse.json();
+    console.log('Health Check Response:', healthData);
+    
+    // Test 2: CORS Test
+    console.log('Test 2: CORS Test');
+    const corsResponse = await fetch(`${API_URL}/cors-test`);
+    const corsData = await corsResponse.json();
+    console.log('CORS Test Response:', corsData);
+    
+    // Test 3: Ping Test
+    console.log('Test 3: Ping Test');
+    const pingResponse = await fetch(`${API_URL}/ping`);
+    const pingData = await pingResponse.json();
+    console.log('Ping Test Response:', pingData);
+    
+    return {
+      success: true,
+      health: healthData,
+      cors: corsData,
+      ping: pingData
+    };
+  } catch (error) {
+    console.error('API Connection Test Failed:', error);
+    return {
+      success: false,
+      error: error.message
+    };
+  }
+};
+
 export default {
   register,
   login,
@@ -312,5 +350,6 @@ export default {
   saveUserQuestion,
   getUserQuestions,
   clearQuestionHistory,
-  checkApiHealth
+  checkApiHealth,
+  testApiConnection
 }; 
