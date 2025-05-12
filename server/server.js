@@ -37,6 +37,12 @@ app.use(cors({
 app.use(express.json());
 app.use(morgan('dev'));
 
+// Add debug logging middleware
+app.use((req, res, next) => {
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
+  next();
+});
+
 // Ensure data directory exists
 const dataDir = process.env.NODE_ENV === 'production' 
   ? path.join(process.cwd(), 'data')  // Use current working directory
@@ -394,11 +400,13 @@ app.put('/api/users/:id/score', (req, res) => {
 
 // Get leaderboard
 app.get('/api/leaderboard', (req, res) => {
+  console.log('Leaderboard request received');
   db.all('SELECT id, username, score, wins FROM users ORDER BY score DESC LIMIT 10', (err, users) => {
     if (err) {
+      console.error('Database error fetching leaderboard:', err);
       return res.status(500).json({ error: 'Database error' });
     }
-    
+    console.log('Leaderboard data sent:', users.length, 'users');
     res.json(users);
   });
 });

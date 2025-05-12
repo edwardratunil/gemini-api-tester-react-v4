@@ -1,6 +1,11 @@
 // API service for interacting with the backend
 
-const API_URL = (process.env.REACT_APP_API_URL || 'http://localhost:5001/api').replace(/\/+$/, '');
+// Ensure API_URL ends with /api and has no double slashes
+const API_URL = (process.env.REACT_APP_API_URL || 'http://localhost:5001/api')
+  .replace(/\/+$/, '')  // Remove trailing slashes
+  .replace(/\/api$/, '') + '/api';  // Ensure /api at the end
+
+console.log('API URL configured as:', API_URL);  // Debug log
 
 /**
  * User Authentication APIs
