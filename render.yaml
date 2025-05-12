@@ -9,7 +9,5 @@ services:
         value: production
       - key: PORT
         value: 5001
-    disk:
-      name: data
-      mountPath: /data
-      sizeGB: 1 
+      - key: FRONTEND_URL
+        value: https://your-vercel-frontend-url.vercel.app 

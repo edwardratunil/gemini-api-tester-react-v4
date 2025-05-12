@@ -23,9 +23,23 @@ app.use(express.json());
 app.use(morgan('dev'));
 
 // Ensure data directory exists
-const dataDir = process.env.NODE_ENV === 'production' ? '/data' : path.join(__dirname, 'data');
+const dataDir = process.env.NODE_ENV === 'production' 
+  ? path.join(process.cwd(), 'data')  // Use current working directory
+  : path.join(__dirname, 'data');
+
 if (!fs.existsSync(dataDir)) {
-  fs.mkdirSync(dataDir, { recursive: true });
+  try {
+    fs.mkdirSync(dataDir, { recursive: true });
+    console.log('Created data directory at:', dataDir);
+  } catch (error) {
+    console.error('Error creating data directory:', error);
+    // Fallback to using the current directory
+    const fallbackDir = path.join(process.cwd(), 'data');
+    if (!fs.existsSync(fallbackDir)) {
+      fs.mkdirSync(fallbackDir, { recursive: true });
+    }
+    console.log('Using fallback data directory at:', fallbackDir);
+  }
 }
 
 // Create or open SQLite database
