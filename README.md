@@ -1,70 +1,125 @@
-# Getting Started with Create React App
+# Gemini API Tester React with SQLite
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+This application is a word guessing game focused on disaster preparedness topics. It uses Google's Gemini API to generate words and hints for the game.
 
-## Available Scripts
+## Features
 
-In the project directory, you can run:
+- User authentication system
+- Word guessing game with different difficulty levels
+- Leaderboard to track high scores
+- Achievement system
+- SQLite database for persistent storage
+- Sound effects and background music
 
-### `npm start`
+## Project Structure
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+The project consists of two main parts:
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+1. **Frontend**: React application
+2. **Backend**: Express server with SQLite database
 
-### `npm test`
+## Prerequisites
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+- Node.js (v14 or higher)
+- NPM (v6 or higher)
 
-### `npm run build`
+## Setup Instructions
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+### 1. Clone the repository
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+```bash
+git clone <repository-url>
+cd gemini-api-tester-react
+```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+### 2. Install frontend dependencies
 
-### `npm run eject`
+```bash
+npm install
+```
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+### 3. Install backend dependencies
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+```bash
+cd server
+npm install
+cd ..
+```
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+### 4. Configure environment variables
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+Create a `.env` file in the root directory with your Gemini API key:
 
-## Learn More
+```bash
+REACT_APP_API_URL=http://localhost:5001/api
+```
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+Create a `.env` file in the server directory:
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+```bash
+PORT=5001
+```
 
-### Code Splitting
+### 5. Start the backend server
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+```bash
+cd server
+npm run dev
+```
 
-### Analyzing the Bundle Size
+The server will start on port 5001 and create a SQLite database file called `database.sqlite` in the server directory.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+### 6. Start the frontend application
 
-### Making a Progressive Web App
+In a new terminal:
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+```bash
+npm start
+```
 
-### Advanced Configuration
+The application will start on port 3000 and open in your default browser.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+## Database Schema
 
-### Deployment
+The SQLite database includes the following tables:
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+- **users**: Stores user account information and game statistics
+- **achievements**: Stores achievement definitions
+- **user_achievements**: Tracks which achievements each user has earned
+- **words**: Stores words used in the game
+- **user_words**: Tracks which words each user has played
+- **user_settings**: Stores user preferences like dark mode, sound settings, etc.
 
-### `npm run build` fails to minify
+## API Endpoints
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+### Authentication
+- `POST /api/register`: Register a new user
+- `POST /api/login`: Login an existing user
+
+### User Management
+- `GET /api/users/:id`: Get user profile
+- `PUT /api/users/:id/score`: Update user score
+- `PUT /api/users/:id/settings`: Save user settings
+
+### Leaderboard
+- `GET /api/leaderboard`: Get top 10 users by score
+
+### Achievements
+- `GET /api/users/:id/achievements`: Get user achievements
+- `POST /api/users/:id/achievements`: Award achievement to user
+
+### Words
+- `GET /api/words`: Get used words
+- `POST /api/words`: Save a used word
+- `DELETE /api/words`: Clear word history
+- `POST /api/users/:id/words`: Record word play for a user
+
+## License
+
+MIT
+
+## Acknowledgments
+
+- Google Gemini API for word generation
+- React for the frontend framework
+- Express and SQLite for the backend

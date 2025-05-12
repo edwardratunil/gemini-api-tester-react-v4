@@ -4,10 +4,10 @@
     <meta charset="utf-8" />
     <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#000000" />
+    <meta name="theme-color" content="#7e57c2" />
     <meta
       name="description"
-      content="Web site created using create-react-app"
+      content="An interactive quiz app to test and improve your disaster preparedness knowledge"
     />
     <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
     <!--
@@ -24,7 +24,10 @@
       work correctly both with client-side routing and a non-root public URL.
       Learn how to configure a non-root public URL by running `npm run build`.
     -->
-    <title>React App</title>
+    <title>Disaster Preparedness Quiz</title>
+    
+    <!-- Hidden audio element to test if browser can play audio files -->
+    <audio id="audio-test" src="%PUBLIC_URL%/audio/click.mp3" preload="auto" style="display:none"></audio>
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
@@ -39,5 +42,28 @@
       To begin the development, run `npm start` or `yarn start`.
       To create a production bundle, use `npm run build` or `yarn build`.
     -->
+    
+    <!-- Simple script to check if audio files can be played -->
+    <script>
+      window.addEventListener('DOMContentLoaded', function() {
+        // Test audio playback
+        var audioTest = document.getElementById('audio-test');
+        if (audioTest) {
+          console.log('Testing audio playback capability...');
+          
+          audioTest.addEventListener('canplaythrough', function() {
+            console.log('Audio test file can be played!');
+          });
+          
+          audioTest.addEventListener('error', function(e) {
+            console.error('Audio test file failed to load:', e);
+            console.error('Audio error code:', audioTest.error ? audioTest.error.code : 'unknown');
+          });
+          
+          // Try to load the audio
+          audioTest.load();
+        }
+      });
+    </script>
   </body>
 </html>
