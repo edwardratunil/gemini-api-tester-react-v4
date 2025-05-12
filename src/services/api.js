@@ -1,6 +1,6 @@
 // API service for interacting with the backend
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
+const API_URL = (process.env.REACT_APP_API_URL || 'http://localhost:5001/api').replace(/\/+$/, '');
 
 /**
  * User Authentication APIs
@@ -278,14 +278,11 @@ export const clearQuestionHistory = async (userId) => {
  * Helper function to handle API responses
  */
 const handleResponse = async (response) => {
-  const data = await response.json();
-  
   if (!response.ok) {
-    const error = (data && data.error) || response.statusText;
-    throw new Error(error);
+    const error = await response.json().catch(() => ({ error: response.statusText }));
+    throw new Error(error.error || response.statusText);
   }
-  
-  return data;
+  return response.json();
 };
 
 // Add API health check

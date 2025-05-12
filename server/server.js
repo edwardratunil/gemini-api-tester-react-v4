@@ -12,14 +12,25 @@ const port = process.env.PORT || 5001;
 
 // Enhanced CORS configuration
 app.use(cors({
-  origin: [
-    process.env.FRONTEND_URL || 'http://localhost:3000',
-    'https://disaster-preparedness-phi.vercel.app',
-    'https://gemini-api-tester-react-v4.vercel.app'
-  ],
+  origin: function(origin, callback) {
+    const allowedOrigins = [
+      'http://localhost:3000',
+      'https://disaster-preparedness-phi.vercel.app',
+      'https://gemini-api-tester-react-v4.vercel.app'
+    ];
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) === -1) {
+      console.log('Origin not allowed:', origin);
+      return callback(new Error('The CORS policy for this site does not allow access from the specified Origin.'), false);
+    }
+    return callback(null, true);
+  },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true
+  credentials: true,
+  preflightContinue: false,
+  optionsSuccessStatus: 204
 }));
 
 // Middleware
@@ -671,9 +682,26 @@ app.delete('/api/users/:id/questions', (req, res) => {
   );
 });
 
+// Add CORS test endpoint
+app.options('/api/cors-test', cors());
+app.get('/api/cors-test', cors(), (req, res) => {
+  res.json({
+    message: 'CORS is working!',
+    origin: req.headers.origin,
+    timestamp: new Date().toISOString()
+  });
+});
+
 // Add health check endpoint
 app.get('/health', (req, res) => {
-  res.status(200).json({ status: 'healthy', timestamp: new Date().toISOString() });
+  res.status(200).json({ 
+    status: 'healthy', 
+    timestamp: new Date().toISOString(),
+    cors: {
+      origin: req.headers.origin,
+      allowed: true
+    }
+  });
 });
 
 // Start server
