@@ -4,6 +4,7 @@ const morgan = require('morgan');
 const path = require('path');
 const sqlite3 = require('sqlite3').verbose();
 const bcrypt = require('bcrypt');
+const fs = require('fs');
 require('dotenv').config();
 
 const app = express();
@@ -21,17 +22,22 @@ app.use(cors({
 app.use(express.json());
 app.use(morgan('dev'));
 
+// Ensure data directory exists
+const dataDir = process.env.NODE_ENV === 'production' ? '/data' : path.join(__dirname, 'data');
+if (!fs.existsSync(dataDir)) {
+  fs.mkdirSync(dataDir, { recursive: true });
+}
+
 // Create or open SQLite database
-const dbPath = process.env.NODE_ENV === 'production' 
-  ? '/data/database.sqlite'  // Render persistent disk path
-  : path.join(__dirname, 'database.sqlite');
+const dbPath = path.join(dataDir, 'database.sqlite');
+console.log('Database path:', dbPath);
 
 const db = new sqlite3.Database(dbPath, (err) => {
   if (err) {
-    console.error('Error opening database', err.message);
+    console.error('Error opening database:', err.message);
     process.exit(1);
   } else {
-    console.log('Connected to the SQLite database.');
+    console.log('Connected to the SQLite database at:', dbPath);
     initializeDatabase();
   }
 });

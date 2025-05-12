@@ -1,4 +1,4 @@
 node_modules/
-database.sqlite
+data/*.sqlite
 .env
 *.log 
