@@ -59,6 +59,59 @@ const testDatabaseConnection = async () => {
 // Test the connection
 testDatabaseConnection();
 
+// Initialize database
+const initializeDatabase = async () => {
+  try {
+    const schemaPath = path.join(__dirname, 'schema.sql');
+    const schema = fs.readFileSync(schemaPath, 'utf8');
+
+    const statements = schema
+      .split(';')
+      .filter(statement => statement.trim())
+      .map(statement => statement + ';');
+
+    for (const statement of statements) {
+      try {
+        await pool.query(statement);
+        console.log('Executed:', statement.split('\n')[0] + '...');
+      } catch (err) {
+        // If the error is about table already existing, we can ignore it
+        if (!err.message.includes('already exists')) {
+          throw err;
+        }
+        console.log('Table already exists, skipping...');
+      }
+    }
+    console.log('Database initialization completed successfully!');
+  } catch (error) {
+    console.error('Error initializing database:', error);
+    // Don't exit the process, just log the error
+  }
+};
+
+// Test database connection and initialize
+const startServer = async () => {
+  try {
+    const result = await pool.query('SELECT NOW()');
+    console.log('Successfully connected to PostgreSQL database');
+    
+    // Initialize database tables
+    await initializeDatabase();
+    
+    // Start the server
+    app.listen(port, '0.0.0.0', () => {
+      console.log(`Server running on port ${port}`);
+      console.log(`Accessible at: http://localhost:${port}`);
+    });
+  } catch (err) {
+    console.error('Error during server startup:', err);
+    // Don't exit the process, just log the error
+  }
+};
+
+// Start the server
+startServer();
+
 // API Routes
 
 // Simple ping endpoint to test connection
@@ -579,13 +632,6 @@ app.get('/health', (req, res) => {
       allowed: true
     }
   });
-});
-
-// Start server
-app.listen(port, '0.0.0.0', () => {
-  console.log(`Server running on port ${port}`);
-  console.log(`Accessible at: http://localhost:${port}`);
-  console.log(`And at: http://YOUR_IP:${port}`);
 });
 
 // Handle shutdown and close database connection

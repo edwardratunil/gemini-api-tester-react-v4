@@ -16,8 +16,16 @@ async function initializeDatabase() {
 
     // Execute each statement
     for (const statement of statements) {
-      await pool.query(statement);
-      console.log('Executed:', statement.split('\n')[0] + '...');
+      try {
+        await pool.query(statement);
+        console.log('Executed:', statement.split('\n')[0] + '...');
+      } catch (err) {
+        // If the error is about table already existing, we can ignore it
+        if (!err.message.includes('already exists')) {
+          throw err;
+        }
+        console.log('Table already exists, skipping...');
+      }
     }
 
     console.log('Database initialization completed successfully!');
@@ -29,4 +37,5 @@ async function initializeDatabase() {
   }
 }
 
+// Run the initialization
 initializeDatabase(); 
