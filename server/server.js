@@ -16,7 +16,8 @@ app.use(cors({
     const allowedOrigins = [
       'http://localhost:3000',
       'https://disaster-preparedness-phi.vercel.app',
-      'https://gemini-api-tester-react-v4.vercel.app'
+      'https://gemini-api-tester-react-v4.vercel.app',
+      'https://disaster-preparedness-phi.vercel.app/'
     ];
     // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
@@ -66,6 +67,8 @@ const initializeDatabase = async () => {
 
   while (retryCount < maxRetries) {
     try {
+      console.log(`Attempting database initialization (attempt ${retryCount + 1}/${maxRetries})...`);
+      
       const schemaPath = path.join(__dirname, 'schema.sql');
       const schema = fs.readFileSync(schemaPath, 'utf8');
 
@@ -79,12 +82,13 @@ const initializeDatabase = async () => {
           await pool.query(statement);
           console.log('Executed:', statement.split('\n')[0] + '...');
         } catch (err) {
-          // If the error is about table already existing, we can ignore it
-          if (!err.message.includes('already exists')) {
-            console.error('Error executing statement:', err.message);
-            throw err;
+          // If the error is about table already existing or duplicate key, we can ignore it
+          if (err.message.includes('already exists') || err.message.includes('duplicate key')) {
+            console.log('Table or data already exists, skipping...');
+            continue;
           }
-          console.log('Table already exists, skipping...');
+          console.error('Error executing statement:', err.message);
+          throw err;
         }
       }
       console.log('Database initialization completed successfully!');
@@ -106,10 +110,12 @@ const initializeDatabase = async () => {
 // Test database connection and initialize
 const startServer = async () => {
   try {
+    console.log('Testing database connection...');
     const result = await pool.query('SELECT NOW()');
     console.log('Successfully connected to PostgreSQL database');
     
     // Initialize database tables
+    console.log('Initializing database tables...');
     const initSuccess = await initializeDatabase();
     if (!initSuccess) {
       console.error('Database initialization failed, but continuing server startup...');
@@ -328,11 +334,15 @@ app.put('/api/users/:id/score', (req, res) => {
   const userId = req.params.id;
   const { score, total_games, wins, winStreak } = req.body;
   
-  const query = 'UPDATE users SET score = $1, total_games = $2, wins = $3, winStreak = $4 WHERE id = $5';
+  console.log('Updating score for user:', userId, { score, total_games, wins, winStreak });
+  
+  const query = 'UPDATE users SET score = $1, total_games = $2, wins = $3, win_streak = $4 WHERE id = $5';
   const values = [score, total_games, wins, winStreak, userId];
+  
   pool.query(query, values, function(err, result) {
     if (err) {
-      return res.status(500).json({ error: 'Database error' });
+      console.error('Database error updating score:', err);
+      return res.status(500).json({ error: 'Database error', details: err.message });
     }
     
     if (result.rowCount === 0) {
@@ -659,6 +669,16 @@ process.on('SIGINT', () => {
     }
     console.log('Closed the database connection.');
     process.exit(0);
+  });
+});
+
+// Add error handling middleware
+app.use((err, req, res, next) => {
+  console.error('Error:', err);
+  res.status(500).json({ 
+    error: 'Internal Server Error',
+    message: err.message,
+    stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
   });
 });
 
