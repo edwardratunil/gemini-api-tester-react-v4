@@ -44,14 +44,20 @@ app.use((req, res, next) => {
 });
 
 // Test database connection
-pool.query('SELECT NOW()', (err, res) => {
-  if (err) {
-    console.error('Error connecting to the database:', err);
-    process.exit(1);
-  } else {
+const testDatabaseConnection = async () => {
+  try {
+    const result = await pool.query('SELECT NOW()');
     console.log('Successfully connected to PostgreSQL database');
+    return true;
+  } catch (err) {
+    console.error('Error connecting to the database:', err);
+    // Don't exit the process, just log the error
+    return false;
   }
-});
+};
+
+// Test the connection
+testDatabaseConnection();
 
 // API Routes
 
