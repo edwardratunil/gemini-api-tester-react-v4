@@ -234,10 +234,11 @@ app.post('/api/login', async (req, res) => {
     // Find user
     const query = 'SELECT * FROM users WHERE username = $1';
     const values = [username];
+    
     pool.query(query, values, async (err, result) => {
       if (err) {
         console.error('Database error during login:', err);
-        return res.status(500).json({ error: 'Database error' });
+        return res.status(500).json({ error: 'Database error', details: err.message });
       }
       
       if (result.rows.length === 0) {
@@ -260,51 +261,55 @@ app.post('/api/login', async (req, res) => {
         console.log(`Login successful for user: ${username}`);
         
         // Update last login
-        const lastLogin = new Date().toISOString();
+        const currentTime = new Date().toISOString();
         const updateQuery = 'UPDATE users SET last_login = $1 WHERE id = $2';
-        const updateValues = [lastLogin, user.id];
-        pool.query(updateQuery, updateValues, function(err, result) {
+        const updateValues = [currentTime, user.id];
+        
+        pool.query(updateQuery, updateValues, function(err, updateResult) {
           if (err) {
             console.error('Error updating last login:', err);
-          }
-        });
-        
-        // Get user settings
-        const settingsQuery = 'SELECT * FROM user_settings WHERE user_id = $1';
-        const settingsValues = [user.id];
-        pool.query(settingsQuery, settingsValues, (err, settingsResult) => {
-          if (err) {
-            console.error('Error fetching user settings:', err);
+            // Don't return error, continue with login
           }
           
-          // Return user data
-          res.json({
-            id: user.id,
-            username: user.username,
-            score: user.score,
-            total_games: user.total_games,
-            wins: user.wins,
-            register_date: user.register_date,
-            last_login,
-            winStreak: user.winStreak,
-            settings: settingsResult.rows[0] || {
-              dark_mode: false,
-              sound_enabled: true,
-              music_enabled: true,
-              music_track: 1,
-              difficulty: 'medium'
+          // Get user settings
+          const settingsQuery = 'SELECT * FROM user_settings WHERE user_id = $1';
+          const settingsValues = [user.id];
+          
+          pool.query(settingsQuery, settingsValues, (err, settingsResult) => {
+            if (err) {
+              console.error('Error fetching user settings:', err);
+              // Don't return error, use default settings
             }
+            
+            // Return user data
+            res.json({
+              id: user.id,
+              username: user.username,
+              score: user.score,
+              total_games: user.total_games,
+              wins: user.wins,
+              register_date: user.register_date,
+              last_login: currentTime,
+              win_streak: user.win_streak,
+              settings: settingsResult?.rows?.[0] || {
+                dark_mode: false,
+                sound_enabled: true,
+                music_enabled: true,
+                music_track: 1,
+                difficulty: 'medium'
+              }
+            });
           });
         });
       } catch (bcryptError) {
         console.error('Bcrypt error during password comparison:', bcryptError);
-        return res.status(500).json({ error: 'Error verifying password' });
+        return res.status(500).json({ error: 'Error verifying password', details: bcryptError.message });
       }
     });
     
   } catch (error) {
     console.error('Server error during login:', error);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: 'Server error', details: error.message });
   }
 });
 
