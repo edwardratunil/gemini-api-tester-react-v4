@@ -12,27 +12,25 @@ const port = process.env.PORT || 5001;
 
 // Enhanced CORS configuration
 app.use(cors({
-  origin: function(origin, callback) {
-    const allowedOrigins = [
-      'http://localhost:3000',
-      'https://disaster-preparedness-phi.vercel.app',
-      'https://gemini-api-tester-react-v4.vercel.app',
-      'https://disaster-preparedness-phi.vercel.app/'
-    ];
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.indexOf(origin) === -1) {
-      console.log('Origin not allowed:', origin);
-      return callback(new Error('The CORS policy for this site does not allow access from the specified Origin.'), false);
-    }
-    return callback(null, true);
-  },
+  origin: '*', // Allow all origins temporarily for debugging
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
   preflightContinue: false,
   optionsSuccessStatus: 204
 }));
+
+// Add CORS headers middleware
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
+  next();
+});
 
 // Middleware
 app.use(express.json());
@@ -422,12 +420,16 @@ app.post('/api/users/:id/achievements', (req, res) => {
   const { achievementId } = req.body;
   const dateAwarded = new Date().toISOString();
   
+  console.log('Awarding achievement:', { userId, achievementId, dateAwarded });
+  
   // Check if user already has this achievement
   const query = 'SELECT * FROM user_achievements WHERE user_id = $1 AND achievement_id = $2';
   const values = [userId, achievementId];
+  
   pool.query(query, values, (err, result) => {
     if (err) {
-      return res.status(500).json({ error: 'Database error' });
+      console.error('Database error checking achievement:', err);
+      return res.status(500).json({ error: 'Database error', details: err.message });
     }
     
     if (result.rows.length > 0) {
@@ -435,23 +437,37 @@ app.post('/api/users/:id/achievements', (req, res) => {
     }
     
     // Award achievement
-    const insertQuery = 'INSERT INTO user_achievements (user_id, achievement_id, date_awarded) VALUES ($1, $2, $3)';
+    const insertQuery = 'INSERT INTO user_achievements (user_id, achievement_id, date_awarded) VALUES ($1, $2, $3) RETURNING id';
     const insertValues = [userId, achievementId, dateAwarded];
-    pool.query(insertQuery, insertValues, function(err, result) {
+    
+    pool.query(insertQuery, insertValues, function(err, insertResult) {
       if (err) {
-        return res.status(500).json({ error: 'Failed to award achievement' });
+        console.error('Database error awarding achievement:', err);
+        return res.status(500).json({ error: 'Failed to award achievement', details: err.message });
+      }
+      
+      if (!insertResult.rows || insertResult.rows.length === 0) {
+        console.error('No rows returned from achievement insert');
+        return res.status(500).json({ error: 'Failed to award achievement - no rows returned' });
       }
       
       // Get achievement details
       const getAchievementQuery = 'SELECT * FROM achievements WHERE name = $1';
       const getAchievementValues = [achievementId];
+      
       pool.query(getAchievementQuery, getAchievementValues, (err, achievementResult) => {
-        if (err || achievementResult.rows.length === 0) {
-          return res.status(500).json({ error: 'Failed to get achievement details' });
+        if (err) {
+          console.error('Database error getting achievement details:', err);
+          return res.status(500).json({ error: 'Failed to get achievement details', details: err.message });
+        }
+        
+        if (!achievementResult.rows || achievementResult.rows.length === 0) {
+          console.error('Achievement not found:', achievementId);
+          return res.status(404).json({ error: 'Achievement not found' });
         }
         
         res.status(201).json({
-          id: result.rows[0].id,
+          id: insertResult.rows[0].id,
           user_id: userId,
           achievement_id: achievementId,
           date_awarded: dateAwarded,
