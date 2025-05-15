@@ -1631,11 +1631,14 @@ Make it informative and factual. Keep it concise and educational.`;
       setFactContent(result);
       setShowFactModal(true);
       
-      // Automatically speak the fact when modal opens
-      // Small timeout to ensure the modal is fully opened before speaking
-      setTimeout(() => {
-        speakFactContent();
-      }, 300);
+      // Wait for the modal to be fully rendered before starting speech
+      // Use requestAnimationFrame to ensure the modal is in the DOM
+      requestAnimationFrame(() => {
+        // Add a small delay to ensure the modal is fully visible
+        setTimeout(() => {
+          speakFactContent();
+        }, 500);
+      });
     } catch (error) {
       console.error('Error fetching educational content:', error);
     } finally {
