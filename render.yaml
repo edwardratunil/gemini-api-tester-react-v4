@@ -10,4 +10,13 @@ services:
       - key: PORT
         value: 5001
       - key: FRONTEND_URL
-        value: https://disaster-preparedness-phi.vercel.app 
+        value: https://disaster-preparedness-phi.vercel.app
+      - key: DATABASE_URL
+        fromDatabase:
+          name: gemini-api-tester-db
+          property: connectionString
+
+databases:
+  - name: gemini-api-tester-db
+    databaseName: gemini_api_tester
+    user: gemini_api_tester_user 
