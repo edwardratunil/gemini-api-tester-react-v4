@@ -1589,17 +1589,15 @@ Format your response EXACTLY as follows with no additional text:
       // Check achievements - after state is updated
       setTimeout(() => {
         checkAchievements(true, wrongGuesses === 0, winStreak + 1);
-        
-        // Show educational fact about the word after a short delay
-        setTimeout(() => {
-          fetchEducationalFact();
-        }, 1000);
       }, 100);
     }, 50);
     
     // Update win streak
     const newWinStreak = winStreak + 1;
     setWinStreak(newWinStreak);
+
+    // Fetch and speak educational fact immediately after winning
+    fetchEducationalFact();
   };
 
   // Handle a loss
@@ -1628,17 +1626,13 @@ Format your response EXACTLY as follows with no additional text:
 Make it informative and factual. Keep it concise and educational.`;
 
       const result = await fetchGeminiResponse(apiKey, prompt, 'gemini-1.5-flash');
+      
+      // Set the fact content and show modal
       setFactContent(result);
       setShowFactModal(true);
       
-      // Wait for the modal to be fully rendered before starting speech
-      // Use requestAnimationFrame to ensure the modal is in the DOM
-      requestAnimationFrame(() => {
-        // Add a small delay to ensure the modal is fully visible
-        setTimeout(() => {
-          speakFactContent();
-        }, 500);
-      });
+      // Start speaking immediately after setting the content
+      speakFactContent();
     } catch (error) {
       console.error('Error fetching educational content:', error);
     } finally {
