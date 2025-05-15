@@ -1574,6 +1574,9 @@ Format your response EXACTLY as follows with no additional text:
 
   // Update handle win to show educational tips after winning
   const handleWin = () => {
+    // Store the current word before any state updates
+    const currentWord = word;
+    
     setGameOver(true);
     setWon(true);
     playSound('win');
@@ -1596,8 +1599,43 @@ Format your response EXACTLY as follows with no additional text:
     const newWinStreak = winStreak + 1;
     setWinStreak(newWinStreak);
 
-    // Fetch and speak educational fact immediately after winning
-    fetchEducationalFact();
+    // Fetch and speak educational fact with the current word
+    fetchEducationalFact(currentWord);
+  };
+
+  // Function to fetch educational fact about the word
+  const fetchEducationalFact = async (wordToUse) => {
+    if (!apiKey || !wordToUse) return;
+    
+    try {
+      setLoading(true);
+      
+      const prompt = `Provide a brief educational paragraph (2-3 sentences) about "${wordToUse}" in the context of disaster preparedness. 
+Make it informative and factual. Keep it concise and educational.`;
+
+      const result = await fetchGeminiResponse(apiKey, prompt, 'gemini-1.5-flash');
+      
+      // Set the fact content and show modal
+      setFactContent(result);
+      setShowFactModal(true);
+      
+      // Ensure we're using the correct word for speech
+      const speechText = `Here's an interesting fact about ${wordToUse}. ${result}`;
+      
+      // Stop any existing speech
+      stopSpeaking();
+      
+      // Start speaking with the correct text
+      const utterance = new SpeechSynthesisUtterance(speechText);
+      utterance.rate = 0.9;
+      utterance.pitch = 1;
+      utterance.volume = 1;
+      window.speechSynthesis.speak(utterance);
+    } catch (error) {
+      console.error('Error fetching educational content:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Handle a loss
@@ -1613,31 +1651,6 @@ Format your response EXACTLY as follows with no additional text:
     setTimeout(() => {
       updateUserStats(false);
     }, 50);
-  };
-
-  // Function to fetch educational fact about the word
-  const fetchEducationalFact = async () => {
-    if (!apiKey || !word) return;
-    
-    try {
-      setLoading(true);
-      
-      const prompt = `Provide a brief educational paragraph (2-3 sentences) about "${word}" in the context of disaster preparedness. 
-Make it informative and factual. Keep it concise and educational.`;
-
-      const result = await fetchGeminiResponse(apiKey, prompt, 'gemini-1.5-flash');
-      
-      // Set the fact content and show modal
-      setFactContent(result);
-      setShowFactModal(true);
-      
-      // Start speaking immediately after setting the content
-      speakFactContent();
-    } catch (error) {
-      console.error('Error fetching educational content:', error);
-    } finally {
-      setLoading(false);
-    }
   };
 
   // Toggle login/register mode
