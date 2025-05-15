@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS users (
 -- Achievements table
 CREATE TABLE IF NOT EXISTS achievements (
     id SERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
+    name VARCHAR(255) UNIQUE NOT NULL,
     title VARCHAR(255) NOT NULL,
     description TEXT NOT NULL,
     icon VARCHAR(50) NOT NULL
@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS achievements (
 CREATE TABLE IF NOT EXISTS user_achievements (
     id SERIAL PRIMARY KEY,
     user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-    achievement_id VARCHAR(255) REFERENCES achievements(name),
+    achievement_id VARCHAR(255) REFERENCES achievements(name) ON DELETE CASCADE,
     date_awarded TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE(user_id, achievement_id)
 );

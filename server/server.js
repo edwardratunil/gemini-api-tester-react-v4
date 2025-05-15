@@ -61,32 +61,46 @@ testDatabaseConnection();
 
 // Initialize database
 const initializeDatabase = async () => {
-  try {
-    const schemaPath = path.join(__dirname, 'schema.sql');
-    const schema = fs.readFileSync(schemaPath, 'utf8');
+  const maxRetries = 3;
+  let retryCount = 0;
 
-    const statements = schema
-      .split(';')
-      .filter(statement => statement.trim())
-      .map(statement => statement + ';');
+  while (retryCount < maxRetries) {
+    try {
+      const schemaPath = path.join(__dirname, 'schema.sql');
+      const schema = fs.readFileSync(schemaPath, 'utf8');
 
-    for (const statement of statements) {
-      try {
-        await pool.query(statement);
-        console.log('Executed:', statement.split('\n')[0] + '...');
-      } catch (err) {
-        // If the error is about table already existing, we can ignore it
-        if (!err.message.includes('already exists')) {
-          throw err;
+      const statements = schema
+        .split(';')
+        .filter(statement => statement.trim())
+        .map(statement => statement + ';');
+
+      for (const statement of statements) {
+        try {
+          await pool.query(statement);
+          console.log('Executed:', statement.split('\n')[0] + '...');
+        } catch (err) {
+          // If the error is about table already existing, we can ignore it
+          if (!err.message.includes('already exists')) {
+            console.error('Error executing statement:', err.message);
+            throw err;
+          }
+          console.log('Table already exists, skipping...');
         }
-        console.log('Table already exists, skipping...');
       }
+      console.log('Database initialization completed successfully!');
+      return true;
+    } catch (error) {
+      retryCount++;
+      console.error(`Error initializing database (attempt ${retryCount}/${maxRetries}):`, error);
+      if (retryCount === maxRetries) {
+        console.error('Failed to initialize database after', maxRetries, 'attempts');
+        return false;
+      }
+      // Wait for 5 seconds before retrying
+      await new Promise(resolve => setTimeout(resolve, 5000));
     }
-    console.log('Database initialization completed successfully!');
-  } catch (error) {
-    console.error('Error initializing database:', error);
-    // Don't exit the process, just log the error
   }
+  return false;
 };
 
 // Test database connection and initialize
@@ -96,7 +110,10 @@ const startServer = async () => {
     console.log('Successfully connected to PostgreSQL database');
     
     // Initialize database tables
-    await initializeDatabase();
+    const initSuccess = await initializeDatabase();
+    if (!initSuccess) {
+      console.error('Database initialization failed, but continuing server startup...');
+    }
     
     // Start the server
     app.listen(port, '0.0.0.0', () => {
