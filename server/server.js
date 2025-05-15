@@ -171,7 +171,7 @@ app.post('/api/register', async (req, res) => {
         const registerDate = new Date().toISOString();
         
         // Create new user
-        const insertQuery = 'INSERT INTO users (username, password, score, totalGames, wins, registerDate, lastLogin) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id';
+        const insertQuery = 'INSERT INTO users (username, password, score, total_games, wins, register_date, last_login) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id';
         const insertValues = [username, hashedPassword, 0, 0, 0, registerDate, registerDate];
         pool.query(insertQuery, insertValues, async (err, result) => {
           if (err) {
@@ -184,7 +184,7 @@ app.post('/api/register', async (req, res) => {
           
           // Create default user settings
           const settingsInsertQuery = 'INSERT INTO user_settings (user_id, dark_mode, sound_enabled, music_enabled, difficulty) VALUES ($1, $2, $3, $4, $5)';
-          const settingsValues = [userId, 0, 1, 1, 'medium'];
+          const settingsValues = [userId, false, true, true, 'medium'];
           pool.query(settingsInsertQuery, settingsValues, function(err, result) {
             if (err) {
               console.error('Error creating user settings:', err);
@@ -197,9 +197,9 @@ app.post('/api/register', async (req, res) => {
               id: userId,
               username,
               score: 0,
-              totalGames: 0,
+              total_games: 0,
               wins: 0,
-              registerDate
+              register_date: registerDate
             });
           });
         });
@@ -257,7 +257,7 @@ app.post('/api/login', async (req, res) => {
         
         // Update last login
         const lastLogin = new Date().toISOString();
-        const updateQuery = 'UPDATE users SET lastLogin = $1 WHERE id = $2';
+        const updateQuery = 'UPDATE users SET last_login = $1 WHERE id = $2';
         const updateValues = [lastLogin, user.id];
         pool.query(updateQuery, updateValues, function(err, result) {
           if (err) {
@@ -278,10 +278,10 @@ app.post('/api/login', async (req, res) => {
             id: user.id,
             username: user.username,
             score: user.score,
-            totalGames: user.totalGames,
+            total_games: user.total_games,
             wins: user.wins,
-            registerDate: user.registerDate,
-            lastLogin,
+            register_date: user.register_date,
+            last_login,
             winStreak: user.winStreak,
             settings: settingsResult.rows[0] || {
               dark_mode: false,
@@ -308,7 +308,7 @@ app.post('/api/login', async (req, res) => {
 app.get('/api/users/:id', (req, res) => {
   const userId = req.params.id;
   
-  const query = 'SELECT id, username, score, totalGames, wins, registerDate, lastLogin, winStreak FROM users WHERE id = $1';
+  const query = 'SELECT id, username, score, total_games, wins, register_date, last_login, winStreak FROM users WHERE id = $1';
   const values = [userId];
   pool.query(query, values, (err, result) => {
     if (err) {
@@ -326,10 +326,10 @@ app.get('/api/users/:id', (req, res) => {
 // Update user score
 app.put('/api/users/:id/score', (req, res) => {
   const userId = req.params.id;
-  const { score, totalGames, wins, winStreak } = req.body;
+  const { score, total_games, wins, winStreak } = req.body;
   
-  const query = 'UPDATE users SET score = $1, totalGames = $2, wins = $3, winStreak = $4 WHERE id = $5';
-  const values = [score, totalGames, wins, winStreak, userId];
+  const query = 'UPDATE users SET score = $1, total_games = $2, wins = $3, winStreak = $4 WHERE id = $5';
+  const values = [score, total_games, wins, winStreak, userId];
   pool.query(query, values, function(err, result) {
     if (err) {
       return res.status(500).json({ error: 'Database error' });

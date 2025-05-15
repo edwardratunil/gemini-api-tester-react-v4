@@ -1,3 +1,12 @@
+-- Drop existing tables if they exist
+DROP TABLE IF EXISTS user_achievements CASCADE;
+DROP TABLE IF EXISTS user_words CASCADE;
+DROP TABLE IF EXISTS user_settings CASCADE;
+DROP TABLE IF EXISTS user_questions CASCADE;
+DROP TABLE IF EXISTS words CASCADE;
+DROP TABLE IF EXISTS achievements CASCADE;
+DROP TABLE IF EXISTS users CASCADE;
+
 -- Users table
 CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
